@@ -8,6 +8,7 @@ use App\Http\Requests\StorePembayaranRequest;
 use App\Http\Resources\PembayaranResource;
 use App\Models\Pembayaran;
 use App\Models\Pemesanan;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -79,10 +80,30 @@ class PembayaranController extends Controller
 
         $validated = $request->validated();
 
-        $pembayaran->update(['status_pembayaran' => $validated['status_pembayaran']]);
+        $data = ['status_pembayaran' => $validated['status_pembayaran']];
+
+        if ($validated['status_pembayaran'] === 'paid') {
+            $data['tanggal_pembayaran'] = Carbon::now();
+        }
+
+        $pembayaran->update($data);
 
         if ($validated['status_pembayaran'] === 'paid') {
             $pemesanan->update(['status_pemesanan' => 'confirmed']);
+
+            $totalKotor = $pembayaran->jumlah_pembayaran;
+            $persentasePlatform = 5.00;
+            $biayaPlatform = round($totalKotor * $persentasePlatform / 100, 2);
+            $jumlahPemilik = $totalKotor - $biayaPlatform;
+
+            $pemesanan->revenueSplit()->create([
+                'id_user'                 => $pemesanan->properti->id_user,
+                'jumlah_kotor'            => $totalKotor,
+                'persentase_biaya_platform' => $persentasePlatform,
+                'jumlah_biaya_platform'   => $biayaPlatform,
+                'jumlah_pemilik'          => $jumlahPemilik,
+                'status'                  => 'pending',
+            ]);
         }
 
         return response()->json([

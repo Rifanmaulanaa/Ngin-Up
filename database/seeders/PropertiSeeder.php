@@ -40,7 +40,7 @@ class PropertiSeeder extends Seeder
                 'max_tamu'          => $item['tamu'],
                 'jumlah_ruang'      => $item['ruang'],
                 'status'            => 'active',
-                'verified_status'   => 'verified',
+                'verified_status'   => $i === 0 ? 'pending' : 'verified',
             ]);
 
             // Gambar

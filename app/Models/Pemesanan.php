@@ -16,6 +16,7 @@ class Pemesanan extends Model
     protected $fillable = [
         'id_user',
         'id_properti',
+        'id_kamar',
         'tanggal_check_in',
         'tanggal_check_out',
         'total_malam',
@@ -45,6 +46,12 @@ class Pemesanan extends Model
     public function properti()
     {
         return $this->belongsTo(Properti::class, 'id_properti', 'id_properti');
+    }
+
+    // N:1 — banyak pemesanan untuk satu kamar (optional)
+    public function kamar()
+    {
+        return $this->belongsTo(Kamar::class, 'id_kamar', 'id_kamar');
     }
 
     // 1:1 — satu pemesanan punya tepat satu pembayaran

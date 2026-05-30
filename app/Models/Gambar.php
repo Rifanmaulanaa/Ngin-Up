@@ -25,6 +25,22 @@ class Gambar extends Model
     ];
 
     // ===========================
+    // ACCESSOR
+    // ===========================
+
+    public function getUrlAttribute(): ?string
+    {
+        if (!$this->url_gambar) {
+            return null;
+        }
+        // If already a full URL, return as-is
+        if (str_starts_with($this->url_gambar, 'http://') || str_starts_with($this->url_gambar, 'https://')) {
+            return $this->url_gambar;
+        }
+        return asset($this->url_gambar);
+    }
+
+    // ===========================
     // RELASI
     // ===========================
 

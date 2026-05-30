@@ -57,7 +57,7 @@ class PemesananController extends Controller
             ], 403);
         }
 
-        $properti = Properti::findOrFail($validated['id_properti']);
+        $properti = Properti::with('kamar')->findOrFail($validated['id_properti']);
 
         if ($properti->id_user === $request->user()->id_user) {
             return response()->json([
@@ -66,10 +66,11 @@ class PemesananController extends Controller
             ], 403);
         }
 
-        if ($properti->max_tamu < $validated['total_tamu']) {
+        // Validasi kamar milik properti ini
+        if (!empty($validated['id_kamar']) && !$properti->kamar->contains('id_kamar', $validated['id_kamar'])) {
             return response()->json([
                 'success' => false,
-                'message' => 'Jumlah tamu melebihi kapasitas maksimal (' . $properti->max_tamu . ')',
+                'message' => 'Kamar tidak tersedia di properti ini',
             ], 422);
         }
 
@@ -84,26 +85,42 @@ class PemesananController extends Controller
             ], 422);
         }
 
-        $bentrok = Pemesanan::where('id_properti', $validated['id_properti'])
-            ->where('status_pemesanan', '!=', 'cancelled')
+        // Cek bentrok — per kamar jika id_kamar diisi, per properti jika tidak
+        $bentrokQuery = Pemesanan::where('status_pemesanan', '!=', 'cancelled')
             ->where(function ($q) use ($checkIn, $checkOut) {
                 $q->where('tanggal_check_in', '<', $checkOut)
                   ->where('tanggal_check_out', '>', $checkIn);
-            })
-            ->exists();
+            });
 
-        if ($bentrok) {
+        if (!empty($validated['id_kamar'])) {
+            $bentrokQuery->where('id_kamar', $validated['id_kamar']);
+        } else {
+            $bentrokQuery->where('id_properti', $validated['id_properti']);
+        }
+
+        if ($bentrokQuery->exists()) {
+            $label = !empty($validated['id_kamar']) ? 'Kamar' : 'Properti';
             return response()->json([
                 'success' => false,
-                'message' => 'Properti sudah dipesan di tanggal tersebut',
+                'message' => "$label sudah dipesan di tanggal tersebut",
             ], 409);
         }
 
-        $totalHarga = $totalMalam * $properti->harga_per_malam;
+        // Harga: pake harga kamar jika ada, else harga properti
+        $hargaPerMalam = $properti->harga_per_malam;
+        if (!empty($validated['id_kamar'])) {
+            $kamar = $properti->kamar->find($validated['id_kamar']);
+            if ($kamar && $kamar->harga_per_malam) {
+                $hargaPerMalam = $kamar->harga_per_malam;
+            }
+        }
+
+        $totalHarga = $totalMalam * $hargaPerMalam;
 
         $pemesanan = Pemesanan::create([
             'id_user'           => $request->user()->id_user,
             'id_properti'       => $validated['id_properti'],
+            'id_kamar'          => $validated['id_kamar'] ?? null,
             'tanggal_check_in'  => $validated['tanggal_check_in'],
             'tanggal_check_out' => $validated['tanggal_check_out'],
             'total_malam'       => $totalMalam,

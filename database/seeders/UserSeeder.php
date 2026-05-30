@@ -74,6 +74,24 @@ class UserSeeder extends Seeder
                 'role'     => 'traveler',
                 'status'   => 'active',
             ],
+            [
+                'nama'     => 'Traveler NginUp',
+                'username' => 'traveler',
+                'email'    => 'traveler@nginup.com',
+                'password' => Hash::make('password'),
+                'no_hp'    => fake()->phoneNumber(),
+                'role'     => 'traveler',
+                'status'   => 'active',
+            ],
+            [
+                'nama'     => 'Owner NginUp',
+                'username' => 'owner1',
+                'email'    => 'owner1@nginup.com',
+                'password' => Hash::make('password'),
+                'no_hp'    => fake()->phoneNumber(),
+                'role'     => 'owner',
+                'status'   => 'active',
+            ],
         ];
 
         foreach ($users as $user) {

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Kamar;
 use App\Models\Fasilitas;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -84,5 +85,21 @@ class Properti extends Model
     public function review()
     {
         return $this->hasMany(Review::class, 'id_properti', 'id_properti');
+    }
+
+    // 1:N — satu properti punya banyak kamar
+    public function kamar()
+    {
+        return $this->hasMany(Kamar::class, 'id_properti', 'id_properti');
+    }
+
+    // ===========================
+    // APPENDS
+    // ===========================
+    protected $appends = ['review_avg_rating'];
+
+    public function getReviewAvgRatingAttribute()
+    {
+        return $this->review()->avg('rating') ?? 0;
     }
 }

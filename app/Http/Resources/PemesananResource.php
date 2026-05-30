@@ -13,6 +13,7 @@ class PemesananResource extends JsonResource
             'id_pesanan'      => $this->id_pesanan,
             'id_user'         => $this->id_user,
             'id_properti'     => $this->id_properti,
+            'id_kamar'        => $this->id_kamar,
             'tanggal_check_in'  => $this->tanggal_check_in,
             'tanggal_check_out' => $this->tanggal_check_out,
             'total_malam'       => $this->total_malam,
